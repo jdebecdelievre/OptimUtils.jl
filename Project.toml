@@ -1,0 +1,20 @@
+name = "OptimUtils"
+uuid = "f0bb934f-c18d-4df9-80c8-5120effcea86"
+authors = ["Jean de_Becdelievre <jeanbecdelievre@gmail.com> and contributors"]
+version = "0.1.0"
+
+[deps]
+AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+DiffResults = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
