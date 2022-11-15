@@ -64,7 +64,7 @@ function makecache(T::DataType, p::Prb, options) where {Prb<:AbstractProblem}
     throw("cache generation function must be defined")
 end
 
-function optfun(p::ProblemCache{Prb}, g::Vector{T}, df::Vector{T}, dg::Matrix{T}, x::Vector{T}, objective::Symbol, memory) where {Prb,T}
+function optfun(p::ProblemCache{Prb}, g::AbstractVector{T}, df::AbstractVector{T}, dg::Matrix{T}, x::AbstractVector{T}, objective::Symbol, memory) where {Prb,T}
     # possible improvement: reinterpret cache instead of disabling tag checking
     ForwardDiff.jacobian!(p.fdresults, (g, x) -> analysis(p, g, x, memory), g, x, p.cfg, Val{false}())
     g .= p.fdresults.value
