@@ -55,18 +55,17 @@ Variables: $(keys(p.variables))
 Output: $(keys(p.output))
 """)
 
-
-function analysis(p::ProblemCache{Prb}, g::Vector{T}, x::Vector{T}, memory) where {T,Prb<:AbstractProblem}
+function analysis(p::ProblemCache{Prb}, g::Vector{T}, x::Vector{T}, memory=nothing) where {T,Prb<:AbstractProblem}
     throw("analysis function must be defined")
 end
 
 function makecache(T::DataType, p::Prb, options) where {Prb<:AbstractProblem}
-    throw("cache generation function must be defined")
+    nothing
 end
 
-function optfun(p::ProblemCache{Prb}, g::AbstractVector{T}, df::AbstractVector{T}, dg::Matrix{T}, x::AbstractVector{T}, objective::Symbol, memory) where {Prb,T}
+function optfun(p::ProblemCache{Prb}, g::AbstractVector{T}, df::AbstractVector{T}, dg::Matrix{T}, x::AbstractVector{T}, objective::Symbol) where {Prb,T}
     # possible improvement: reinterpret cache instead of disabling tag checking
-    ForwardDiff.jacobian!(p.fdresults, (g, x) -> analysis(p, g, x, memory), g, x, p.cfg, Val{false}())
+    ForwardDiff.jacobian!(p.fdresults, (g, x) -> analysis(p, g, x), g, x, p.cfg, Val{false}())
     g .= p.fdresults.value
     dg .= p.fdresults.derivs[1]
 
@@ -75,4 +74,12 @@ function optfun(p::ProblemCache{Prb}, g::AbstractVector{T}, df::AbstractVector{T
         df[i] = p.fdresults.derivs[1][p.idg[objective], i]
     end
     return f
+end
+
+function optfun(p::ProblemCache{Prb}, g::AbstractVector{T}, dg::Matrix{T}, x::AbstractVector{T}) where {Prb,T}
+    # possible improvement: reinterpret cache instead of disabling tag checking
+    ForwardDiff.jacobian!(p.fdresults, (g, x) -> analysis(p, g, x), g, x, p.cfg, Val{false}())
+    g .= p.fdresults.value
+    dg .= p.fdresults.derivs[1]
+    nothing
 end
