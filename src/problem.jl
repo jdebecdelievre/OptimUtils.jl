@@ -48,14 +48,16 @@ struct ProblemCache{
     end
 end
 
-Base.show(io::IO, p::ProblemCache{Prb}) where Prb = print(
+Base.show(io::IO, p::ProblemCache{Prb}) where Prb = print(io,
 """
 ProblemCache for $Prb
 Variables: $(keys(p.variables))
 Output: $(keys(p.output))
 """)
+Base.show(io::IO, p::Type{<:ProblemCache{Prb}}) where Prb = print(io,"ProblemCache{$Prb}")
 
-function analysis(p::ProblemCache{Prb}, g::Vector{T}, x::Vector{T}, memory=nothing) where {T,Prb<:AbstractProblem}
+
+function analysis(p::ProblemCache, g::Vector, x::Vector, memory=nothing)
     throw("analysis function must be defined")
 end
 
@@ -63,7 +65,7 @@ function makecache(T::DataType, p::Prb, options) where {Prb<:AbstractProblem}
     nothing
 end
 
-function optfun(p::ProblemCache{Prb}, g::AbstractVector{T}, df::AbstractVector{T}, dg::Matrix{T}, x::AbstractVector{T}, objective::Symbol) where {Prb,T}
+function optfun(p::ProblemCache, g::AbstractVector, df::AbstractVector, dg::AbstractMatrix, x::AbstractVector, objective::Symbol)
     # possible improvement: reinterpret cache instead of disabling tag checking
     ForwardDiff.jacobian!(p.fdresults, (g, x) -> analysis(p, g, x), g, x, p.cfg, Val{false}())
     g .= p.fdresults.value
@@ -76,7 +78,7 @@ function optfun(p::ProblemCache{Prb}, g::AbstractVector{T}, df::AbstractVector{T
     return f
 end
 
-function optfun(p::ProblemCache{Prb}, g::AbstractVector{T}, dg::Matrix{T}, x::AbstractVector{T}) where {Prb,T}
+function optfun(p::ProblemCache, g::AbstractVector, dg::AbstractMatrix, x::AbstractVector)
     # possible improvement: reinterpret cache instead of disabling tag checking
     ForwardDiff.jacobian!(p.fdresults, (g, x) -> analysis(p, g, x), g, x, p.cfg, Val{false}())
     g .= p.fdresults.value

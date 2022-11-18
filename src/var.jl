@@ -39,7 +39,7 @@ struct Var{N,ng}
             group = (group,)
         end
         # ng = length(group)
-        @assert (all(ini <= ub) && (ini >= lb)) "Initial guess not within bounds: $lb <= $ini <= $ub"
+        @assert (all(ini .<= ub) && all(ini .>= lb)) "Initial guess not within bounds: $lb <= $ini <= $ub"
         return new{N,ng}(ini,lb,ub,group)
     end
 end
@@ -167,7 +167,7 @@ scale(x::Vector{<:Real}, V::NTV) = scale!(copy(x), V)
 
 
 scale(x::Real, v::Var{1}) = (x - v.lb[1]) / (v.ub[1] - v.lb[1])
-scale(x::SVector{N,<:Real}, v::Var{N}) where N = SA[((x[i] - v.lb[i]) * (v.ub[i] - v.lb[i]) for i=1:N)...]
+scale(x::SVector{N,<:Real}, v::Var{N}) where N = SA[((x[i] - v.lb[i]) / (v.ub[i] - v.lb[i]) for i=1:N)...]
 scale(x::Vector{<:Real}, v::Var{N}) where N = [(x[i] - v.lb[i])/(v.ub[i] - v.lb[i]) for i=1:N]
 
 function mergevar(V1::NTV, V2::NTV)
