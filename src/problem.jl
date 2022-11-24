@@ -14,6 +14,8 @@ struct ProblemCache{
     # Variables
     variables::var
     x::Vector{T}
+    x_lb::Vector{T}
+    x_ub::Vector{T}
     idx::IDX
 
     # Objective and constraints
@@ -34,6 +36,8 @@ struct ProblemCache{
         # Var basics
         idx = indexbyname(variables)
         x = ini_scaled(variables)
+        x_lb = lower(variables)
+        x_ub = upper(variables)
         idg = indexbyname(output)
         g = ini(output)
         usercache = makecache(eltype(x), prb, options)
@@ -43,7 +47,7 @@ struct ProblemCache{
         cfg = ForwardDiff.JacobianConfig(OptimUtils.analysis, g, x, ForwardDiff.Chunk{chunksize}(), nothing)
         usercache_dual = makecache(eltype(cfg), prb, options)
         
-        new{Prb,var,out,typeof(idx),typeof(idg),typeof(usercache),typeof(usercache_dual),opt,typeof(fdresults),typeof(cfg),eltype(x)}(prb, variables, x, idx, output, g, idg, 
+        new{Prb,var,out,typeof(idx),typeof(idg),typeof(usercache),typeof(usercache_dual),opt,typeof(fdresults),typeof(cfg),eltype(x)}(prb, variables, x, x_lb, x_ub, idx, output, g, idg, 
                             usercache, options, usercache_dual, fdresults, cfg)
     end
 end
@@ -57,11 +61,11 @@ Output: $(keys(p.output))
 Base.show(io::IO, p::Type{<:ProblemCache{Prb}}) where Prb = print(io,"ProblemCache{$Prb}")
 
 
-function analysis(p::ProblemCache, g::Vector, x::Vector, memory=nothing)
+function analysis(p::ProblemCache, g::AbstractVector, x::AbstractVector, memory=nothing)
     throw("analysis function must be defined")
 end
 
-function makecache(T::DataType, p::Prb, options) where {Prb<:AbstractProblem}
+function makecache(T::DataType, p::AbstractProblem, options)
     nothing
 end
 
