@@ -50,6 +50,8 @@ Var(group::Symbol; N::Int64=1) = Var(lb=zeros(N), ub=ones(N), group=(group,))
 NTV = NamedTuple
 # Base.show(io::IO, V::NTV) = (for (vk,vi)=pairs(V); println(io, "$vk:$vi"); end)
 
+ini_scaled(v::Var{N}) where N = (v.ini .- v.lb) ./ (v.ub .- v.lb) # inefficient only called once
+ini_scaled(v::Var{1}) = (v.ini[1] - v.lb[1]) / (v.ub[1] - v.lb[1]) # inefficient only called once
 ini(V::NTV) = vcat((v.ini for v = V)...)
 lower(V::NTV) = vcat((v.lb  for v = V)...)
 upper(V::NTV) = vcat((v.ub  for v = V)...)
