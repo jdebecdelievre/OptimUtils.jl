@@ -44,6 +44,9 @@ struct Var{N,ng}
     end
 end
 Var(group::Symbol; N::Int64=1) = Var(lb=zeros(N), ub=ones(N), group=(group,))
+function Base.:(==)(v1::Var{N1, ng1}, v2::Var{N2, ng2}) where {N1,N2,ng1,ng2}
+    return (N1==N2) && (ng1==ng2) && (v1.ini == v2.ini) && (v1.lb == v2.lb) && (v1.ub == v2.ub) && (v1.group == v2.group)
+end
 # Base.show(io::IO, v::Var) = println(io, "$(v.lb) ≤ $(v.ini) ≤ $(v.ub)")
 
 # Convenient index functions
@@ -339,4 +342,19 @@ function variables_summary(io::IO, V::NTV; sig::Int64=2, units=map(t->"", V), de
     # Print and return
     println(io, base)
     return base
+end
+
+function setvariables!(x_sink,x_source,var_sink, var_source)
+    isink = indexbyname(var_sink)
+    isource = indexbyname(var_source)
+    for v=intersect(keys(var_sink), keys(var_source))
+        @assert length(var_sink[v]) == length(var_source[v]) "unequal length on $v"
+        lbsr = var_source[v].lb
+        ubsr = var_source[v].ub
+        lbsi = var_sink[v].lb
+        ubsi = var_sink[v].ub
+        for i=eachindex(isink[v])
+            x_sink[isink[v][i]] = ((x_source[isource[v][i]]*(ubsr[i]-lbsr[i])+lbsr[i]) - lbsi[i])/(ubsi[i]-lbsi[i])
+        end
+    end
 end
