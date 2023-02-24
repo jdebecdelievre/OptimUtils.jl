@@ -260,31 +260,34 @@ Show results in table
 """
 results_summary(V::NTV, values::NTV; sig::Int64=2, units=map(t->"", V), description=map(t->"", V)) = results_summary(stderr, V, values, sig=sig, units=units, description=description)
 function results_summary(io::IO, V::NTV, values::NTV; sig::Int64=2, units=map(t->"", V), description=map(t->"", V))
-    
+    # Decide whether to cover this variables
+    K = intersect(keys(description),keys(units))    
+
     # Get string of value
     vals = map(values) do v
         if isa(v, Number) 
-        return @sprintf "%.2f" v
+        # return @sprintf "%.2f" v
+        return "\\num{$v}"
         else
-            str = prod((@sprintf "%.2f," vv) for vv=v)
+            str = prod("\\num{$vv}," for vv=v)
+            # str = prod((@sprintf "%.2f," vv) for vv=v)
             return "[$(str[1:end-1])]"
         end
     end
 
     # Get active bound
-    idx = 1
     tol = 1e-6
     function isactive(variable, value)
         n = len(variable)
         str = ""
         for i=eachindex(variable.ini)
-            if (value[idx] < variable.lb[i]+tol)
+            if (value[i] < variable.lb[i]+tol)
                 if n == 1
                     return "lower"
                 else
                     str*= "lower $i, "
                 end
-            elseif (value[idx] > variable.ub[i]-tol)
+            elseif (value[i] > variable.ub[i]-tol)
                 if n == 1
                     return "upper"
                 else
@@ -299,13 +302,17 @@ function results_summary(io::IO, V::NTV, values::NTV; sig::Int64=2, units=map(t-
 
     # Create string
     base = """
-    \\begin{tabular}{|c|c|c|c|c|}
+    \\sisetup{
+        round-precision=2
+    }
+    \\begin{tabular}{ccccc}
     \\hline
     {\\bf Design Variables} & {Symbol} & {Unit} & {Value} & {Active Bound} \\\\
     \\hline 
     """
     for (i,v)=enumerate(keys(values))
-        base *= "$(description[v]) & \$\\$(v)\$ & \\si{$(units[v])} & $(vals[v]) & $(act[v])\\\\ \n"
+        (v ∈ K) && 
+        (base *= "$(description[v]) & \$\\$(v)\$ & \\si{$(units[v])} & $(vals[v]) & $(act[v])\\\\ \n")
     end
     base *= "\\hline \n \\end{tabular} \n \\vspace{3cm}"
 
@@ -316,28 +323,35 @@ end
 
 variables_summary(V::NTV; sig::Int64=2, units=map(t->"", V), description=map(t->"", V))    = variables_summary(stderr, V, sig=sig, units=units, description=description)
 function variables_summary(io::IO, V::NTV; sig::Int64=2, units=map(t->"", V), description=map(t->"", V))    
+    # Decide whether to cover this variables
+    K = intersect(keys(description),keys(units))    
+
     # Get string of value
     val = map(V) do v
         if len(v) == 1
-            return ((@sprintf "%.2f" v.lb[1]), (@sprintf "%.2f" v.ub[1]))
+            # return ((@sprintf "%.2f" v.lb[1]), (@sprintf "%.2f" v.ub[1]))
+            return ("\\num{$(v.lb[1])}", "\\num{$(v.ub[1])}")
         else
-            lb = prod((@sprintf "%.2f," vv) for vv=v.lb)
-            ub = prod((@sprintf "%.2f," vv) for vv=v.ub)
+            lb = prod("\\num{$vv}," for vv=v.lb)
+            ub = prod("\\num{$vv}," for vv=v.ub)
+            # lb = prod((@sprintf "%.2f," vv) for vv=v.lb)
+            # ub = prod((@sprintf "%.2f," vv) for vv=v.ub)
             return ("[$(lb[1:end-1])]","[$(ub[1:end-1])]")
         end
     end
 
     # Create string
     base = """
-    \\begin{tabular}{|c|c|c|c|c|}
-    \\hline
+    \\begin{tabular}{ccccc}
+    \\toprule
     {\\bf Design Variables} & {Symbol} & {Unit} & {Lower Bound} & {Upper Bound} \\\\
-    \\hline 
+    \\midrule
     """
     for (i,v)=enumerate(keys(V))
-        base *= "$(description[v]) & \$\\$(v)\$ & \\si{$(units[v])} & $(val[v][1]) & $(val[v][2])\\\\ \n"
+        (v ∈ K) && 
+        (base *= "$(description[v]) & \$\\$(v)\$ & \\si{$(units[v])} & $(val[v][1]) & $(val[v][2])\\\\ \n")
     end
-    base *= "\\hline \n \\end{tabular} \n \\vspace{3cm}"
+    base *= "\\bottomrule \n \\end{tabular} \n \\vspace{3cm}"
 
     # Print and return
     println(io, base)
