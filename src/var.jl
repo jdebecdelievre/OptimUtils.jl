@@ -295,7 +295,7 @@ function results_summary(io::IO, V::NTV, values::NTV; sig::Int64=2, units=map(t-
                 end
             end
         end
-        strip(str,',')
+        str=strip(strip(str),',')
         return str
     end
     act = map(isactive,V,values)
@@ -303,7 +303,8 @@ function results_summary(io::IO, V::NTV, values::NTV; sig::Int64=2, units=map(t-
     # Create string
     base = """
     \\sisetup{
-        round-precision=2
+        round-precision=2,
+        round-mode=figures
     }
     \\begin{tabular}{ccccc}
     \\hline
@@ -342,6 +343,10 @@ function variables_summary(io::IO, V::NTV; sig::Int64=2, units=map(t->"", V), de
 
     # Create string
     base = """
+    \\sisetup{
+        round-precision=2,
+        round-mode=figures
+    }
     \\begin{tabular}{ccccc}
     \\toprule
     {\\bf Design Variables} & {Symbol} & {Unit} & {Lower Bound} & {Upper Bound} \\\\
